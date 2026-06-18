@@ -898,7 +898,7 @@ function Metric({ label, value, tone = 'ink' }: { label: string; value: string; 
   return (
     <div className="panel grid min-h-36 min-w-0 content-between p-4">
       <span className="text-xs font-black uppercase text-concrete">{label}</span>
-      <strong className={cn('min-w-0 truncate text-[clamp(1.55rem,3vw,2.25rem)] font-black leading-none', tone === 'ink' ? 'text-ink' : 'text-accent')}>{value}</strong>
+      <strong className={cn('min-w-0 text-[clamp(1.25rem,2.25vw,1.85rem)] font-black leading-none', tone === 'ink' ? 'text-ink' : 'text-accent')}>{value}</strong>
     </div>
   );
 }
