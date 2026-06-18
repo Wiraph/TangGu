@@ -8,9 +8,8 @@ export function ConcreteScene() {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.35));
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.domElement.setAttribute('aria-hidden', 'true');
     mount.appendChild(renderer.domElement);
@@ -19,9 +18,9 @@ export function ConcreteScene() {
     const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 0.2, 8);
 
-    const grid = new THREE.GridHelper(10, 10, 0x8f8f89, 0xd8d6cf);
+    const grid = new THREE.GridHelper(13, 13, 0x8f8f89, 0xb6b4ad);
     grid.rotation.x = Math.PI / 2;
-    grid.position.set(2.2, -0.4, -3.4);
+    grid.position.z = -2.9;
     scene.add(grid);
 
     const group = new THREE.Group();
@@ -29,19 +28,19 @@ export function ConcreteScene() {
       color: 0x5f5f5a,
       wireframe: true,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.16,
     });
     const accentMaterial = new THREE.MeshBasicMaterial({
       color: 0xf05a28,
       wireframe: true,
       transparent: true,
-      opacity: 0.06,
+      opacity: 0.1,
     });
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 7; index += 1) {
       const geometry = new THREE.TorusGeometry(0.58 + index * 0.06, 0.025, 8, 42);
       const mesh = new THREE.Mesh(geometry, index === 2 ? accentMaterial : lineMaterial);
-      mesh.position.set(index * 0.72 + 0.2, Math.sin(index) * 0.24 - 0.22, -index * 0.22);
+      mesh.position.set(index * 0.82 - 2.45, Math.sin(index) * 0.35 - 0.2, -index * 0.22);
       mesh.rotation.set(Math.PI / 2.5, index * 0.16, index * 0.08);
       group.add(mesh);
     }
@@ -50,17 +49,15 @@ export function ConcreteScene() {
       color: 0x111111,
       wireframe: true,
       transparent: true,
-      opacity: 0.07,
+      opacity: 0.11,
     });
 
-    for (let index = 0; index < 5; index += 1) {
+    for (let index = 0; index < 6; index += 1) {
       const geometry = new THREE.BoxGeometry(0.32, 0.55 + index * 0.22, 0.32);
       const mesh = new THREE.Mesh(geometry, barMaterial);
-      mesh.position.set(index * 0.48 + 0.2, -1.45 + index * 0.12, -1.2);
+      mesh.position.set(index * 0.48 - 1.2, -1.45 + index * 0.12, -1.2);
       group.add(mesh);
     }
-
-    group.position.set(1.8, 0.1, 0);
 
     scene.add(group);
 
@@ -74,31 +71,18 @@ export function ConcreteScene() {
     let animationId = 0;
 
     const animate = () => {
-      group.rotation.x += prefersReducedMotion ? 0 : 0.00025;
-      group.rotation.y += prefersReducedMotion ? 0 : 0.00045;
-      grid.position.x = 2.2 + Math.sin(Date.now() * 0.00016) * 0.06;
+      group.rotation.x += 0.0006;
+      group.rotation.y += 0.001;
+      grid.position.x = Math.sin(Date.now() * 0.00025) * 0.12;
       renderer.render(scene, camera);
-      if (!document.hidden && !prefersReducedMotion) {
-        animationId = requestAnimationFrame(animate);
-      } else {
-        animationId = 0;
-      }
+      animationId = requestAnimationFrame(animate);
     };
 
     animate();
 
-    const handleVisibility = () => {
-      if (!document.hidden && !animationId && !prefersReducedMotion) {
-        animate();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', resize);
-      document.removeEventListener('visibilitychange', handleVisibility);
       renderer.dispose();
       lineMaterial.dispose();
       accentMaterial.dispose();
@@ -112,5 +96,5 @@ export function ConcreteScene() {
     };
   }, []);
 
-  return <div ref={mountRef} className="pointer-events-none fixed inset-0 z-0 opacity-30 mix-blend-multiply" />;
+  return <div ref={mountRef} className="pointer-events-none fixed inset-0 z-0 opacity-55 mix-blend-multiply" />;
 }
