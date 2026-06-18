@@ -565,14 +565,14 @@ function WeeklyView({ weekly }: { weekly: ReturnType<typeof weeklyStats> }) {
   const [chartRef, chartSize] = useMeasuredElement();
 
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid min-w-0 gap-4">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Metric label="Weekly Income" value={money(weekly.income)} />
         <Metric label="Weekly Expense" value={money(weekly.expense)} tone="accent" />
         <Metric label="Weekly Net" value={money(weekly.net)} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <div className="panel min-h-80 min-w-0">
           <SectionTitle icon={CalendarDays} title="Weekly Flow" />
           <div ref={chartRef} className="h-72 min-w-0 px-2 pb-4">
@@ -590,21 +590,21 @@ function WeeklyView({ weekly }: { weekly: ReturnType<typeof weeklyStats> }) {
           </div>
         </div>
 
-        <div className="grid gap-4">
-          <div className="panel">
+        <div className="grid min-w-0 gap-4">
+          <div className="panel min-w-0">
             <SectionTitle icon={CircleDollarSign} title="Weekly Categories" />
             <div className="grid gap-2 p-4 pt-0">
               {weekly.byCategory.length === 0 && <p className="font-bold text-concrete">No weekly expenses</p>}
               {weekly.byCategory.map((item) => (
-                <div key={item.name} className="grid grid-cols-[1fr_auto] items-center border-b-[3px] border-line py-2 last:border-0">
-                  <span className="font-black">{item.name}</span>
+                <div key={item.name} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b-[3px] border-line py-2 last:border-0">
+                  <span className="truncate font-black">{item.name}</span>
                   <span className="font-black text-accent">{money(item.value)}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="panel">
+          <div className="panel min-w-0">
             <SectionTitle icon={ArrowDownUp} title="Weekly Timeline" />
             <Timeline transactions={weekly.weekly} />
           </div>
@@ -896,9 +896,9 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof WalletCards; title: 
 
 function Metric({ label, value, tone = 'ink' }: { label: string; value: string; tone?: 'ink' | 'accent' }) {
   return (
-    <div className="panel grid min-h-36 content-between p-4">
+    <div className="panel grid min-h-36 min-w-0 content-between p-4">
       <span className="text-xs font-black uppercase text-concrete">{label}</span>
-      <strong className={cn('text-4xl font-black', tone === 'ink' ? 'text-ink' : 'text-accent')}>{value}</strong>
+      <strong className={cn('min-w-0 truncate text-[clamp(1.55rem,3vw,2.25rem)] font-black leading-none', tone === 'ink' ? 'text-ink' : 'text-accent')}>{value}</strong>
     </div>
   );
 }
