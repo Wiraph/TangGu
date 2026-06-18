@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Noto+Sans+Thai:wght@500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #111318;
+  background: #f7f5ef;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f4f3ef;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .panel {
+    @apply border-[3px] border-line bg-paper/95 shadow-panel backdrop-blur-sm;
+  }
+
+  .icon-button {
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center border-[3px] border-line bg-white text-ink transition hover:bg-accent hover:text-white disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .field {
+    @apply h-12 w-full border-[3px] border-line bg-white px-3 text-base font-black outline-none transition focus:bg-accent/10;
+  }
+}
