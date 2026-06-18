@@ -126,7 +126,7 @@ function App() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-paper text-ink">
-      <div className="fixed inset-0 z-0 bg-[url('/concrete-structure.png')] bg-cover bg-center opacity-25 grayscale" />
+      <div className="fixed inset-0 z-0 bg-cover bg-center opacity-25 grayscale" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}concrete-structure.png)` }} />
       <div className="fixed inset-0 z-0 bg-[linear-gradient(90deg,rgba(244,243,239,0.92)_0%,rgba(244,243,239,0.74)_52%,rgba(244,243,239,0.94)_100%)]" />
       <ConcreteScene />
       <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-6">
