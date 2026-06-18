@@ -34,6 +34,22 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+@keyframes revealSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-38%) skewX(-12deg);
+  }
+
+  35% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(42%) skewX(-12deg);
+  }
+}
+
 @layer components {
   .panel {
     @apply border-[3px] border-line bg-paper/95 shadow-panel backdrop-blur-sm;

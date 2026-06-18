@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useId, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDownUp,
@@ -33,9 +33,10 @@ import { createTransaction, deleteTransaction, getTransactions, updateTransactio
 import { dailyStats, monthlyStats, weeklyStats, yearlyStats } from './lib/analytics';
 import { cn } from './lib/utils';
 import { formatDateThai, formatMonthThai, money, monthKey, todayIso, yearKey } from './lib/utils';
-import { ConcreteScene } from './components/ConcreteScene';
+const ConcreteScene = lazy(() => import('./components/ConcreteScene').then((module) => ({ default: module.ConcreteScene })));
 
 const palette = ['#111111', '#f05a28', '#8f8f89', '#d8d6cf', '#5f5f5f', '#ffffff'];
+const transactionsKey = ['transactions'] as const;
 const accountIcons = {
   MAKE: WalletCards,
   Dime: PiggyBank,
@@ -59,6 +60,7 @@ function App() {
   const [view, setView] = useState<ViewMode>('monthly');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<TransactionInput>(emptyForm);
+  const [showBackgroundScene, setShowBackgroundScene] = useState(false);
   const [selectedDate, setSelectedDate] = useState(todayIso());
   const [selectedWeekDate, setSelectedWeekDate] = useState(todayIso());
   const [selectedMonth, setSelectedMonth] = useState(monthKey(todayIso()));
@@ -66,9 +68,17 @@ function App() {
   const reportYear = isYearString(selectedYear) ? selectedYear : yearKey(todayIso());
 
   const transactionsQuery = useQuery({
-    queryKey: ['transactions'],
+    queryKey: transactionsKey,
     queryFn: getTransactions,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    staleTime: 30_000,
   });
+
+  useEffect(() => {
+    const schedule = window.setTimeout(() => setShowBackgroundScene(true), 500);
+    return () => window.clearTimeout(schedule);
+  }, []);
 
   const transactions = useMemo(() => transactionsQuery.data ?? [], [transactionsQuery.data]);
   const availableYears = useMemo(() => {
@@ -87,24 +97,62 @@ function App() {
 
   const saveMutation = useMutation({
     mutationFn: () => (editingId ? updateTransaction(editingId, form) : createTransaction(form)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: transactionsKey });
+      const previousTransactions = queryClient.getQueryData<Transaction[]>(transactionsKey);
+      const optimisticId = editingId ?? makeOptimisticId(form.date);
+      const optimisticTransaction: Transaction = { ...form, id: optimisticId };
+
+      queryClient.setQueryData<Transaction[]>(transactionsKey, (current = []) => {
+        if (editingId) {
+          return current.map((transaction) => (transaction.id === editingId ? optimisticTransaction : transaction));
+        }
+
+        return [optimisticTransaction, ...current];
+      });
+
+      return { previousTransactions, optimisticId, wasEditing: Boolean(editingId) };
+    },
+    onSuccess: (savedTransaction, _variables, context) => {
+      queryClient.setQueryData<Transaction[]>(transactionsKey, (current = []) =>
+        current
+          .map((transaction) => (transaction.id === context?.optimisticId || transaction.id === savedTransaction.id ? savedTransaction : transaction))
+          .sort((a, b) => b.date.localeCompare(a.date)),
+      );
       setEditingId(null);
       setForm({ ...emptyForm, date: todayIso() });
     },
-    onError: (error) => {
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: transactionsKey, refetchType: 'inactive' });
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(transactionsKey, context.previousTransactions);
+      }
       console.error('Save transaction failed', error);
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteTransaction(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: transactionsKey });
+      const previousTransactions = queryClient.getQueryData<Transaction[]>(transactionsKey);
+      queryClient.setQueryData<Transaction[]>(transactionsKey, (current = []) => current.filter((transaction) => transaction.id !== id));
+
+      return { previousTransactions };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setEditingId(null);
       setForm({ ...emptyForm, date: todayIso() });
     },
-    onError: (error) => {
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: transactionsKey, refetchType: 'inactive' });
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(transactionsKey, context.previousTransactions);
+      }
       console.error('Delete transaction failed', error);
     },
   });
@@ -127,8 +175,13 @@ function App() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-paper text-ink">
       <div className="fixed inset-0 z-0 bg-cover bg-center opacity-25 grayscale" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}concrete-structure.png)` }} />
-      <div className="fixed inset-0 z-0 bg-[linear-gradient(90deg,rgba(244,243,239,0.92)_0%,rgba(244,243,239,0.74)_52%,rgba(244,243,239,0.94)_100%)]" />
-      <ConcreteScene />
+      <div className="fixed inset-0 z-0 bg-[radial-gradient(circle_at_78%_30%,rgba(240,90,40,0.08),transparent_20rem),linear-gradient(90deg,rgba(244,243,239,0.96)_0%,rgba(244,243,239,0.88)_52%,rgba(244,243,239,0.97)_100%)]" />
+      <div className="pointer-events-none fixed inset-0 z-0 animate-[revealSweep_1.8s_ease-out_both] bg-[linear-gradient(112deg,transparent_0%,rgba(255,255,255,0.62)_38%,transparent_68%)]" />
+      {showBackgroundScene && (
+        <Suspense fallback={null}>
+          <ConcreteScene />
+        </Suspense>
+      )}
       <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-6">
         <header className="grid min-h-24 gap-4 border-y-[5px] border-ink bg-paper/90 py-4 lg:col-span-2 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="grid gap-1">
@@ -499,6 +552,10 @@ function filterTransactionsForView(transactions: Transaction[], view: ViewMode, 
 
 function isYearString(value: string) {
   return /^\d{4}$/.test(value);
+}
+
+function makeOptimisticId(date: string) {
+  return `optimistic_${date.replaceAll('-', '')}_${crypto.randomUUID().slice(0, 8)}`;
 }
 
 function toIsoDate(date: Date) {
