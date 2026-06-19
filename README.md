@@ -16,7 +16,7 @@ TangGu is a personal finance tracker built as a static React app with Google She
 ## Features
 
 - Income, expense, and transfer transactions
-- Bank/account selector: MAKE, Dime, MyMo, Krungthai, Cash
+- Bank/account selector: MAKE, Dime, MyMo, Krungthai, Cash, TrueMoney
 - Daily, Weekly, Monthly, and Yearly analytics
 - Custom date and month pickers styled for the app theme
 - Inline edit/delete from History
@@ -161,7 +161,7 @@ income, expense, transfer
 Accounts:
 
 ```text
-MAKE, Dime, MyMo, Krungthai, Cash
+MAKE, Dime, MyMo, Krungthai, Cash, TrueMoney
 ```
 
 ## License

@@ -1,7 +1,7 @@
 const SHEET_NAME = 'Transactions';
 const SPREADSHEET_ID = '1OFmXrxDUZpGLFxSIfKMkxwuWmRgUlDxCS5QGpGoiXKw';
 const HEADERS = ['id', 'date', 'type', 'amount', 'account', 'to_account', 'category', 'note'];
-const ACCOUNTS = ['MAKE', 'Dime', 'MyMo', 'Krungthai', 'Cash'];
+const ACCOUNTS = ['MAKE', 'Dime', 'MyMo', 'Krungthai', 'Cash', 'TrueMoney'];
 const TYPES = ['income', 'expense', 'transfer'];
 const INCOME_CATEGORIES = ['เงินเดือน', 'ฟรีแลนซ์', 'ขายของ', 'ดอกเบี้ย', 'เงินคืน', 'รายรับอื่นๆ'];
 const EXPENSE_CATEGORIES = ['อาหาร', 'เดินทาง', 'ช้อปปิ้ง', 'ที่อยู่อาศัย', 'ลงทุน', 'อื่นๆ'];

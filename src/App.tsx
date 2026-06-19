@@ -13,6 +13,7 @@ import {
   Plus,
   RotateCcw,
   Save,
+  Smartphone,
   Trash2,
   WalletCards,
 } from 'lucide-react';
@@ -42,6 +43,7 @@ const accountIcons = {
   MyMo: CircleDollarSign,
   Krungthai: Landmark,
   Cash: Banknote,
+  TrueMoney: Smartphone,
 } satisfies Record<Account, typeof WalletCards>;
 
 const emptyForm: TransactionInput = {
@@ -813,7 +815,7 @@ function BankSelector({ label, value, options, onChange }: { label: string; valu
   return (
     <div className="grid gap-2 border-[3px] border-line bg-white p-2">
       <span className="px-1 text-xs font-black uppercase text-concrete">{label}</span>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
         {options.map((account) => {
           const Icon = accountIcons[account];
           return (
