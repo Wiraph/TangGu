@@ -137,9 +137,9 @@ function App() {
             <p className="text-sm font-black uppercase text-accent">TangGu / Private Ledger</p>
             <h1 className="max-w-4xl text-4xl font-black uppercase leading-none sm:text-6xl lg:text-7xl">Personal Finance Tracker</h1>
           </div>
-          <div className="grid min-w-56 border-[5px] border-ink bg-white px-4 py-3 text-right">
+          <div className="grid w-full min-w-56 max-w-full justify-self-end border-[5px] border-ink bg-white px-4 py-3 text-right sm:w-fit sm:min-w-72">
             <span className="text-xs font-black uppercase text-concrete">Net Balance</span>
-            <strong className="text-3xl font-black text-accent">{money(netBalance)}</strong>
+            <strong className="whitespace-nowrap text-[clamp(1.75rem,4vw,2.25rem)] font-black text-accent">{money(netBalance)}</strong>
           </div>
         </header>
 
