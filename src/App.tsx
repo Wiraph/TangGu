@@ -148,12 +148,12 @@ function App() {
             <StatusAlert title="Google Sheet connection failed" message={transactionsQuery.error.message} />
           )}
 
-          <div className="flex gap-2 overflow-x-auto border-b-[5px] border-line pb-2">
+          <div className="grid grid-cols-4 gap-2 border-b-[5px] border-line pb-2">
             {(['daily', 'weekly', 'monthly', 'yearly'] as ViewMode[]).map((mode) => (
               <button
                 key={mode}
                 className={cn(
-                  'h-11 min-w-28 border-[3px] px-4 text-sm font-black uppercase transition',
+                  'h-11 min-w-0 border-[3px] px-1 text-xs font-black uppercase transition sm:text-sm',
                   view === mode ? 'border-ink bg-accent text-ink' : 'border-line bg-white text-ink hover:bg-raw',
                 )}
                 onClick={() => setView(mode)}
