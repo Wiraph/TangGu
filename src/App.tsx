@@ -812,12 +812,10 @@ function StatusAlert({ title, message }: { title: string; message: string }) {
 }
 
 function BankSelector({ label, value, options, onChange }: { label: string; value: Account; options: readonly Account[]; onChange: (account: Account) => void }) {
-  const gridColumns = options.length === 5 ? 'grid-cols-5' : 'grid-cols-6';
-
   return (
     <div className="grid gap-2 border-[3px] border-line bg-white p-2">
       <span className="px-1 text-xs font-black uppercase text-concrete">{label}</span>
-      <div className={cn('grid gap-2', gridColumns)}>
+      <div className="grid grid-cols-3 gap-2">
         {options.map((account) => {
           const Icon = accountIcons[account];
           return (
