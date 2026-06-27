@@ -11,6 +11,7 @@ TangGu is a personal finance tracker built as a static React app with Google She
 - TanStack Query
 - PWA support
 - Google Apps Script + Google Sheets backend
+- JSONP transport for Apps Script browser compatibility
 - GitHub Pages deployment
 
 ## Features
@@ -91,6 +92,8 @@ TANGGU_ACCESS_TOKEN = the-same-token-you-use-in-env
 11. Use that URL as `VITE_GAS_WEB_APP_URL`.
 
 The sheet can start empty. The backend will create a `Transactions` sheet and headers automatically.
+
+TangGu calls Apps Script through JSONP to avoid browser CORS blocking on GitHub Pages. Because of this, keep the access token long and private, and redeploy Apps Script whenever `apps-script/Code.gs` changes.
 
 ## Apps Script Updates
 

@@ -24,19 +24,13 @@ function makeId(date: string) {
   return `tx_${date.replaceAll('-', '')}_${suffix}`;
 }
 
-async function postToGas<T>(payload: unknown): Promise<T> {
+async function callGas<T>(payload: Record<string, unknown>): Promise<T> {
   if (!endpoint) {
     throw new Error('Missing VITE_GAS_WEB_APP_URL');
   }
 
-  const response = await fetchGas(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ ...(payload as Record<string, unknown>), token: accessToken }),
-  });
-
-  const json = await parseGasResponse(response);
-  if (!response.ok || json.success === false) {
+  const json = await requestJsonp(endpoint, { ...payload, token: accessToken });
+  if (json.success === false) {
     throw new Error(json.error || 'Google Apps Script request failed');
   }
 
@@ -48,46 +42,12 @@ export async function getTransactions(): Promise<Transaction[]> {
     return readLocal().sort((a, b) => b.date.localeCompare(a.date));
   }
 
-  const url = new URL(endpoint);
-  url.searchParams.set('action', 'getTransactions');
-  if (accessToken) {
-    url.searchParams.set('token', accessToken);
-  }
-  const response = await fetchGas(url);
-  const json = await parseGasResponse(response);
-  if (!response.ok || json.success === false) {
+  const json = await requestJsonp(endpoint, { action: 'getTransactions', token: accessToken });
+  if (json.success === false) {
     throw new Error(json.error || 'Unable to load transactions');
   }
 
   return json.data as Transaction[];
-}
-
-async function fetchGas(input: RequestInfo | URL, init?: RequestInit) {
-  try {
-    return await fetch(input, init);
-  } catch (error) {
-    if (error instanceof TypeError) {
-      throw new Error('Cannot reach Google Apps Script. Check that the Web App URL is the latest /exec deployment and that Code.gs contains doGet and doPost.');
-    }
-
-    throw error;
-  }
-}
-
-async function parseGasResponse(response: Response) {
-  const text = await response.text();
-
-  try {
-    return JSON.parse(text) as { success?: boolean; data?: unknown; error?: string };
-  } catch {
-    const scriptError = text.match(/<div[^>]*>\s*([^<]*(?:doGet|doPost)[^<]*)\s*<\/div>/i)?.[1];
-    if (scriptError) {
-      throw new Error(scriptError);
-    }
-
-    const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    throw new Error(cleanText || `Google Apps Script returned ${response.status}`);
-  }
 }
 
 export async function createTransaction(data: TransactionInput): Promise<Transaction> {
@@ -97,7 +57,7 @@ export async function createTransaction(data: TransactionInput): Promise<Transac
     return transaction;
   }
 
-  return postToGas<Transaction>({ action: 'CREATE', data });
+  return callGas<Transaction>({ action: 'CREATE', data: JSON.stringify(data) });
 }
 
 export async function updateTransaction(id: string, data: Partial<TransactionInput>): Promise<Transaction> {
@@ -111,7 +71,7 @@ export async function updateTransaction(id: string, data: Partial<TransactionInp
     return updated;
   }
 
-  return postToGas<Transaction>({ action: 'UPDATE', id, data });
+  return callGas<Transaction>({ action: 'UPDATE', id, data: JSON.stringify(data) });
 }
 
 export async function deleteTransaction(id: string): Promise<{ id: string }> {
@@ -120,5 +80,44 @@ export async function deleteTransaction(id: string): Promise<{ id: string }> {
     return { id };
   }
 
-  return postToGas<{ id: string }>({ action: 'DELETE', id });
+  return callGas<{ id: string }>({ action: 'DELETE', id });
+}
+
+function requestJsonp(url: string, params: Record<string, unknown>) {
+  return new Promise<{ success?: boolean; data?: unknown; error?: string }>((resolve, reject) => {
+    const callbackName = `__tanggu_jsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const script = document.createElement('script');
+    const requestUrl = new URL(url);
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error('Google Apps Script request timed out'));
+    }, 20000);
+
+    function cleanup() {
+      window.clearTimeout(timeout);
+      script.remove();
+      delete (window as unknown as Record<string, unknown>)[callbackName];
+    }
+
+    (window as unknown as Record<string, unknown>)[callbackName] = (payload: { success?: boolean; data?: unknown; error?: string }) => {
+      cleanup();
+      resolve(payload);
+    };
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        requestUrl.searchParams.set(key, String(value));
+      }
+    });
+    requestUrl.searchParams.set('callback', callbackName);
+
+    script.src = requestUrl.toString();
+    script.async = true;
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('Cannot reach Google Apps Script. Check the Web App URL, access setting, and deployed Code.gs version.'));
+    };
+
+    document.head.appendChild(script);
+  });
 }

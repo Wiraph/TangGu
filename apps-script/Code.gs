@@ -20,12 +20,27 @@ function doGet(e) {
     const action = e && e.parameter ? e.parameter.action : '';
 
     if (action === 'getTransactions') {
-      return json_({ success: true, data: getTransactions_() });
+      return respond_(e, { success: true, data: getTransactions_() });
     }
 
-    return json_({ success: false, error: 'Unknown GET action' }, 400);
+    if (action === 'CREATE') {
+      const created = createTransaction_(parseJsonParam_(e, 'data', {}));
+      return respond_(e, { success: true, data: created });
+    }
+
+    if (action === 'UPDATE') {
+      const updated = updateTransaction_(e.parameter.id, parseJsonParam_(e, 'data', {}));
+      return respond_(e, { success: true, data: updated });
+    }
+
+    if (action === 'DELETE') {
+      deleteTransaction_(e.parameter.id);
+      return respond_(e, { success: true, data: { id: e.parameter.id } });
+    }
+
+    return respond_(e, { success: false, error: 'Unknown GET action' });
   } catch (error) {
-    return json_({ success: false, error: error.message || String(error) }, 500);
+    return respond_(e, { success: false, error: error.message || String(error) });
   }
 }
 
@@ -202,6 +217,12 @@ function parsePayload_(e) {
   return JSON.parse(e.postData.contents);
 }
 
+function parseJsonParam_(e, name, fallback) {
+  const value = e && e.parameter ? e.parameter[name] : '';
+  if (!value) return fallback;
+  return JSON.parse(value);
+}
+
 function authorize_(token) {
   const configuredToken = PropertiesService.getScriptProperties().getProperty('TANGGU_ACCESS_TOKEN');
   if (configuredToken && String(token || '') !== configuredToken) {
@@ -211,4 +232,15 @@ function authorize_(token) {
 
 function json_(payload) {
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function respond_(e, payload) {
+  const callback = e && e.parameter ? e.parameter.callback : '';
+  if (callback) {
+    return ContentService
+      .createTextOutput(callback + '(' + JSON.stringify(payload) + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  return json_(payload);
 }
